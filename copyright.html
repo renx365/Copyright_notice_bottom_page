@@ -1,0 +1,167 @@
+<head>
+    <style>
+        .custom-footer {
+            display: flex;
+            align-items: flex-end; /* 修改为右对齐 */
+            justify-content: flex-end; /* 修改为右对齐 */
+            padding: 12px 10px;
+            gap: 8px;
+            opacity: 0; /* 初始透明度为0 */
+            transform: translateY(-20px); /* 初始位置向上偏移20px */
+            transition: opacity 0.5s ease, transform 0.5s ease; /* 渐入动画效果 */
+        }
+        .custom-footer.loaded {
+            opacity: 1;
+            transform: translateY(0); /* 最终位置回到原位 */
+        }
+        .footer-module {
+            color: var(--normal-color);
+            transition: color 0.2s ease;
+            text-decoration: none;
+        }
+        .footer-module:hover {
+            color: var(--hover-color);
+        }
+        .footer-module.active {
+            color: var(--active-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="custom-footer">
+        <footer>
+            <p id="copyright"></p>
+        </footer>
+    </div>
+    <script>
+        const footerConfig = {
+            copyright: {
+                blandcre: "©️",
+                year: "0000", // 值为0000则显示当前年份
+                owner: "朝云忆梦 | Auro Muze", // 打包在「」内
+                text: "All rights reserved unless otherwise specified.",
+                chpoor: "···", // 值为···则text省略符号
+            },
+            links: [
+                { name: "法律条款", url: "/docs" }
+            ],
+            Separator: {
+                showSeparator: 0, 
+                Separator0: " | ", // 值为0则为[空格]|[空格]
+                Separator1: " " // 值为1则为[空格]
+            },
+            mode:{
+                mode: 0, // 0为dark，1为light
+                mode0: {
+                    normal: "#6a6a6a",
+                    hover: "#8a8a8a",
+                    active: "#a0a0a0"
+                },
+                mode1: {
+                    normal: "#a0a0a0",
+                    hover: "#8a8a8a",
+                    active: "#6a6a6a"
+                }
+            }
+        };
+
+        // 临时参数定义
+        let koung = 0; // 空间，值为0显示text，值为1省略符号
+        let kuong = 0; // 空间，值为0在一行显示，值为1在两行显示
+
+        function setScreenParams() {
+            // 获取屏幕尺寸（X轴和Y轴）
+            const x = window.innerWidth || document.documentElement.clientWidth;
+            const y = window.innerHeight || document.documentElement.clientHeight;
+
+            // 判断条件
+            if (x >= 1.236 * y) {
+                koung = 0;      // X轴比Y轴大一倍以上
+                kuong = 0;      // 根据逻辑补充默认值
+            } else if (y >= 1.236 * x) {
+                koung = 1;      // Y轴比X轴大一倍以上
+                kuong = 1;
+            } else {
+                koung = 1;      // 其他情况（差异不足一倍）
+                kuong = 0;
+            }
+        }
+
+        // 初始化时设置参数
+        setScreenParams();
+
+        // 监听窗口尺寸变化（响应式场景）
+        window.addEventListener('resize', () => {
+            setScreenParams();
+            console.log({ koung, kuong });
+        });
+
+
+        // 新增颜色配置获取函数
+        function getColorConfig(type) {
+            const mode = footerConfig.mode.mode;
+            return footerConfig.mode[`mode${mode}`][type];
+        }
+
+        // 动态获取当前年份
+        const currentYear = new Date().getFullYear();
+        const yearDisplay = footerConfig.copyright.year === "0000" ? currentYear : footerConfig.copyright.year;
+
+        // 模块化part1，版权归属模块
+        const part1 = `${footerConfig.copyright.blandcre}${yearDisplay}「${footerConfig.copyright.owner}」`;
+
+        // 模块化part2，版权声明模块
+        const part2 = (koung === 1 && kuong === 1) 
+            ? '' 
+            : (koung === 0 
+                ? `${footerConfig.copyright.text}` 
+                : `${footerConfig.copyright.chpoor}`);
+
+        // 合并模块P1，版权信息模块合并
+        const P1 = `${part1} ${part2}`;
+
+        // 模块化P2，分隔符模块
+        const P2 = kuong === 1 ? '' : (footerConfig.Separator.showSeparator === 0 ? `${footerConfig.Separator.Separator0}` : `${footerConfig.Separator.Separator1}`);
+
+        // 模块化P3，监听link
+        const P3 = footerConfig.links.map((link, index) => {
+            const separator = index < footerConfig.links.length - 1 ? part3 : '';
+            return `<a class="link-item footer-module" data-type="p3" href="${link.url}" style="color: inherit;">${link.name}</a>${separator}`;
+        }).join('');
+
+        //主要模块
+        const copyrightText = `
+            <span class="footer-module" data-type="p1">${P1}</span>
+            <span class="footer-module" data-type="p2">${P2}</span>
+            <span class="footer-module" data-type="p3">${kuong === 1 ? '<br>' : ''}${P3}</span>
+        `;
+        document.getElementById('copyright').innerHTML = copyrightText;
+
+        // 新增事件监听器
+        const modules = document.querySelectorAll('.footer-module');
+        modules.forEach(module => {
+            module.addEventListener('mouseenter', () => {
+                modules.forEach(m => m.classList.remove('active'));
+                module.classList.add('active');
+            });
+            module.addEventListener('mouseleave', () => {
+                module.classList.remove('active');
+            });
+        });
+
+        // 设置初始颜色
+        const normalColor = getColorConfig('normal');
+        const hoverColor = getColorConfig('hover');
+        const activeColor = getColorConfig('active');
+        document.documentElement.style.setProperty('--normal-color', normalColor);
+        document.documentElement.style.setProperty('--hover-color', hoverColor);
+        document.documentElement.style.setProperty('--active-color', activeColor);
+
+        // 在页面加载完成后添加loaded类，触发渐入动画
+        window.addEventListener('load', () => {
+            document.querySelector('.custom-footer').classList.add('loaded');
+        });
+
+    </script>
+</body>
+
